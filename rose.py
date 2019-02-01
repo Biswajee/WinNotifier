@@ -6,6 +6,7 @@
 # Standard libraries
 import sys
 import urllib.request
+import pandas as pd
 import logging
 import threading
 from os import path
@@ -29,12 +30,24 @@ class RoseTask:
 
     # function to execute the CMD task
     def cmdTask(self, command, arguments=None):
-        subprocess.call(command, shell=True)
         toaster = ToastNotifier()
         toaster.show_toast("Command execution started",
-                           "Command: " + command + " Arguments: " + arguments,
+                           "Command: " + command + " Arguments: " + str(arguments),
                            icon_path=None,
                            duration=5)
+        # Running the command received as parameter
+        subprocess.call(command, shell=True)
+        toaster.show_toast("Command execution over",
+                           "Command: " + command + " Arguments: " + str(arguments) + " has exited",
+                           icon_path=None,
+                           duration=5,
+                           threaded=True)
+
+        # Wait for threaded notification to finish
+        while toaster.notification_active(): sleep(0.1)
+
+
+
 
     def URLTask(self, argument=None):
         if argument == None:
@@ -46,12 +59,20 @@ class RoseTask:
                            icon_path=None,
                            duration=5)
         try:
+            print("Use 1 or 2 to highlight choice :")
+            download_type = int(input(" ? Download as 1. CSV or 2. Raw : "))
             filename = input("Enter a file name to save the response: ")
 
-            # Display the notification : Command execution started
-            data = urllib.request.urlopen(argument)
-            with open('Downloads/'+filename, 'w') as file:
-                file.write(str(data.read()))
+            with open('Downloads/'+filename, 'w+') as file:
+                if download_type == 1:
+                    data = pd.read_csv(argument)
+                    df = data.applymap(str)
+                    file.write(str(df))
+                if download_type == 2:
+                    data = urllib.request.urlopen(argument)
+                    file.write(str(data.read()))
+                else:
+                    print(" ! Please choose a download type")
 
         except Exception as e:
             print(str(e))
@@ -86,7 +107,7 @@ if(len(sys.argv) > 1):
         task.help()
 
     if(sys.argv[1] == "run"):
-        task.cmdTask(sys.argv[2], sys.argv[3])
+        task.cmdTask(sys.argv[2])
 
 
 
@@ -102,10 +123,3 @@ if(len(sys.argv) > 1):
 #                    icon_path="assets/icon.png",
 #                    duration=10)
 #
-# toaster.show_toast("Example two",
-#                    "This notification is in it's own thread!",
-#                    icon_path=None,
-#                    duration=5,
-#                    threaded=True)
-# # Wait for threaded notification to finish
-# while toaster.notification_active(): sleep(0.1)
