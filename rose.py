@@ -1,10 +1,11 @@
 # ROSE CLI - CMD utility to display notification on task completion
 
 # Running Rose:
-
+# rose [command] [parameters]
 
 # Standard libraries
 import sys
+import urllib.request
 import logging
 import threading
 from os import path
@@ -17,7 +18,7 @@ from win10toast import ToastNotifier
 class RoseTask:
 
     def __init__(self):
-        print("Thank you for using ROSE CLI. To view a list of available commands, type 'rose help'\n")
+        print("Thank you for using ROSE CLI. To view a list of available commands, type 'rose help'")
 
         # Constants
         self.ROSE_VERSION = '0.0.1'
@@ -27,8 +28,21 @@ class RoseTask:
         print("Current rose version : ", self.ROSE_VERSION)
 
     # function to execute the CMD task
-    def cmdTask(self, command):
+    def cmdTask(self, command, arguments=None):
         subprocess.call(command, shell=True)
+        toaster = ToastNotifier()
+        toaster.show_toast("Command execution started",
+                           "Command: " + command + " Arguments: " + arguments,
+                           icon_path=None,
+                           duration=5)
+
+    def help(self):
+        print("ROSE CLI Help:")
+        print("Syntax: rose [command] [options]")
+        print("List of all available commands:")
+        print("--------------------------------")
+        print("url - Usage : rose url [some url] Details : Downloads url content to a file and notifies when task completes")
+        print("run - Usage : rose run [command] Details : Runs Windows commands and notifies on completion")
 
 
 
@@ -41,7 +55,24 @@ if(len(sys.argv) == 1):
 
 # When rose is executed with atleast an argument...
 if(len(sys.argv) > 1):
-    task.cmdTask(sys.argv[1])
+    # Download a file (probably, a CSV for data science project !)
+    if(sys.argv[1] == "url"):
+        try:
+            filename = input("Enter a file name to save the response: ")
+
+            # Display the notification : Command execution started
+            task.cmdTask(sys.argv[1], sys.argv[2])
+            data = urllib.request.urlopen(sys.argv[2])
+            with open(filename, 'w') as file:
+                file.write(str(data.read()))
+
+        except Exception as e:
+            print(str(e))
+
+    # Displays the generic help message
+    if(sys.argv[1] == "help"):
+        task.help()
+
 
 
 
@@ -53,7 +84,7 @@ if(len(sys.argv) > 1):
 # toaster = ToastNotifier()
 # toaster.show_toast("Hello World!!!",
 #                    "Python is 10 seconds awsm!",
-#                    icon_path="custom.ico",
+#                    icon_path="assets/icon.png",
 #                    duration=10)
 #
 # toaster.show_toast("Example two",
