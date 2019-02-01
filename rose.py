@@ -36,9 +36,30 @@ class RoseTask:
                            icon_path=None,
                            duration=5)
 
+    def URLTask(self, argument=None):
+        if argument == None:
+            print("Please provide a valid URL")
+            return
+        toaster = ToastNotifier()
+        toaster.show_toast("Command execution started",
+                           "Command type:  Content Download  URL: " + argument,
+                           icon_path=None,
+                           duration=5)
+        try:
+            filename = input("Enter a file name to save the response: ")
+
+            # Display the notification : Command execution started
+            data = urllib.request.urlopen(argument)
+            with open('Downloads/'+filename, 'w') as file:
+                file.write(str(data.read()))
+
+        except Exception as e:
+            print(str(e))
+
+
     def help(self):
-        print("ROSE CLI Help:")
-        print("Syntax: rose [command] [options]")
+        print("\nROSE CLI Help:")
+        print("Syntax: rose [command] [options]\n")
         print("List of all available commands:")
         print("--------------------------------")
         print("url - Usage : rose url [some url] Details : Downloads url content to a file and notifies when task completes")
@@ -57,21 +78,15 @@ if(len(sys.argv) == 1):
 if(len(sys.argv) > 1):
     # Download a file (probably, a CSV for data science project !)
     if(sys.argv[1] == "url"):
-        try:
-            filename = input("Enter a file name to save the response: ")
+        task.URLTask(sys.argv[2])
 
-            # Display the notification : Command execution started
-            task.cmdTask(sys.argv[1], sys.argv[2])
-            data = urllib.request.urlopen(sys.argv[2])
-            with open(filename, 'w') as file:
-                file.write(str(data.read()))
-
-        except Exception as e:
-            print(str(e))
 
     # Displays the generic help message
     if(sys.argv[1] == "help"):
         task.help()
+
+    if(sys.argv[1] == "run"):
+        task.cmdTask(sys.argv[2], sys.argv[3])
 
 
 
